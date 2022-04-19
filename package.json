@@ -8,7 +8,8 @@
 		"node": "16.x"
 	},
 	"scripts": {
-		"start": "nodemon --delay 200ms src/index.js",
+		"dev": "nodemon --delay 200ms src/index.js",
+		"start": "node src/index.js",
 		"db:migrate": "sequelize-cli db:migrate",
 		"db:g:migration": "sequelize-cli migration:generate --name"
 	},
