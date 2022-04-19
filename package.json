@@ -4,6 +4,9 @@
 	"description": "apolloservertodoapp",
 	"type": "commonjs",
 	"main": "src/index.js",
+	"engines": {
+		"node": "16.x"
+	},
 	"scripts": {
 		"start": "nodemon --delay 200ms src/index.js",
 		"db:migrate": "sequelize-cli db:migrate",
