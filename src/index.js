@@ -173,7 +173,8 @@ const resolvers = {
 	await server.start();
 	server.applyMiddleware({ app });
 
-	const PORT = 5000;
+	const PORT = 8080;
+	// const HOST = 'https://apolloservertodoapp.herokuapp.com/';
 
 	httpServer.listen(PORT, () => {
 		console.log(`Server is now running on http://localhost:${PORT}${server.graphqlPath}`);
