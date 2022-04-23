@@ -144,7 +144,7 @@ const resolvers = {
 
 	const subscriptionServer = SubscriptionServer.create(
 		{ schema, execute, subscribe },
-		{ server: httpServer, path: '/graphql' }
+		{ server: httpServer, path: '/' }
 	);
 
 	const server = new ApolloServer({
