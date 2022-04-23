@@ -12,7 +12,6 @@ const { Sequelize } = require('sequelize');
 
 const { PubSub } = require('graphql-subscriptions');
 
-const PORT = 5000;
 const pubsub = new PubSub();
 
 const convertStringToDate = (str) => new Date(str).toLocaleString();
@@ -138,6 +137,7 @@ const resolvers = {
 		}
 	}
 };
+
 (async () => {
 	const app = express();
 	const httpServer = createServer(app);
@@ -172,6 +172,8 @@ const resolvers = {
 
 	await server.start();
 	server.applyMiddleware({ app });
+
+	const PORT = 5000;
 
 	httpServer.listen(PORT, () => {
 		console.log(`Server is now running on http://localhost:${PORT}${server.graphqlPath}`);
