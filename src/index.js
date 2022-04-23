@@ -142,10 +142,7 @@ const resolvers = {
 
 	const schema = makeExecutableSchema({ typeDefs, resolvers });
 
-	const subscriptionServer = SubscriptionServer.create(
-		{ schema, execute, subscribe },
-		{ server: httpServer, path: '/' }
-	);
+	const subscriptionServer = SubscriptionServer.create({ schema, execute, subscribe }, { server: httpServer });
 
 	const server = new ApolloServer({
 		schema,
