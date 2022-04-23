@@ -1,17 +1,20 @@
 const express = require('express');
 
+const { ApolloServerPluginDrainHttpServer } = require('apollo-server-core');
 const { createServer } = require('http');
-const { execute, subscribe } = require('graphql');
-const { makeExecutableSchema } = require('@graphql-tools/schema');
-
 const { gql } = require('apollo-server');
+const { makeExecutableSchema } = require('@graphql-tools/schema');
+const { useServer } = require('graphql-ws/lib/use/ws');
+
 const { ApolloServer } = require('apollo-server-express');
-const { PubSub } = require('graphql-subscriptions');
-const { SubscriptionServer } = require('subscriptions-transport-ws');
+const { WebSocketServer } = require('ws');
 const { Sequelize } = require('sequelize');
+
+const { PubSub } = require('graphql-subscriptions');
 
 const PORT = 5000;
 const pubsub = new PubSub();
+
 const convertStringToDate = (str) => new Date(str).toLocaleString();
 
 const postgresConfig =
@@ -71,8 +74,18 @@ const typeDefs = gql`
 `;
 
 const TODO_LATEST = 'TODO_LATEST';
+const NUMBER_INCREMENTED = 'NUMBER_INCREMENTED';
 
 const resolvers = {
+	Subscription: {
+		todoLatest: {
+			subscribe: () => pubsub.asyncIterator(TODO_LATEST)
+		},
+		numberIncremented: {
+			subscribe: () => pubsub.asyncIterator(NUMBER_INCREMENTED)
+		}
+	},
+
 	Query: {
 		todos: async () => {
 			const result = await sequelize.query('select * from todos');
@@ -123,35 +136,33 @@ const resolvers = {
 			await sequelize.query(`delete from todos WHERE id = ${id}`);
 			return true;
 		}
-	},
-
-	Subscription: {
-		todoLatest: {
-			subscribe: () => pubsub.asyncIterator([TODO_LATEST])
-		},
-		numberIncremented: {
-			subscribe: () => pubsub.asyncIterator(['NUMBER_INCREMENTED'])
-		}
 	}
 };
-
-(async function () {
+(async () => {
 	const app = express();
-
 	const httpServer = createServer(app);
 
 	const schema = makeExecutableSchema({ typeDefs, resolvers });
 
-	const subscriptionServer = SubscriptionServer.create({ schema, execute, subscribe }, { server: httpServer });
+	const wsServer = new WebSocketServer({
+		server: httpServer,
+		path: '/graphql'
+	});
+
+	const serverCleanup = useServer({ schema }, wsServer);
 
 	const server = new ApolloServer({
 		schema,
 		plugins: [
+			// Proper shutdown for the HTTP server.
+			ApolloServerPluginDrainHttpServer({ httpServer }),
+
+			// Proper shutdown for the WebSocket server.
 			{
 				async serverWillStart() {
 					return {
 						async drainServer() {
-							await subscriptionServer.close();
+							await serverCleanup.dispose();
 						}
 					};
 				}
@@ -163,7 +174,7 @@ const resolvers = {
 	server.applyMiddleware({ app });
 
 	httpServer.listen(PORT, () => {
-		// console.log(`Server is now running on http://localhost:${PORT}${server.graphqlPath}`);
+		console.log(`Server is now running on http://localhost:${PORT}${server.graphqlPath}`);
 		sequelize
 			.authenticate()
 			.then(() => {
@@ -175,10 +186,11 @@ const resolvers = {
 	});
 })();
 
-let currentNumber = 0;
-function incrementNumber() {
-	currentNumber++;
-	pubsub.publish('NUMBER_INCREMENTED', { numberIncremented: currentNumber });
-	setTimeout(incrementNumber, 1000);
-}
-incrementNumber();
+// let currentNumber = 0;
+// function incrementNumber() {
+// 	currentNumber++;
+// 	pubsub.publish(NUMBER_INCREMENTED, { numberIncremented: currentNumber });
+// 	setTimeout(incrementNumber, 1000);
+// }
+
+// incrementNumber();
