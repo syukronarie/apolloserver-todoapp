@@ -173,11 +173,11 @@ const resolvers = {
 	await server.start();
 	server.applyMiddleware({ app });
 
-	const PORT = 8080;
 	// const HOST = 'https://apolloservertodoapp.herokuapp.com/';
 
-	httpServer.listen(PORT, () => {
-		console.log(`Server is now running on http://localhost:${PORT}${server.graphqlPath}`);
+	httpServer.listen(process.env.PORT || 8080, function () {
+		console.log('Express server listening on port %d in %s mode', this.address().port, app.settings.env);
+
 		sequelize
 			.authenticate()
 			.then(() => {
