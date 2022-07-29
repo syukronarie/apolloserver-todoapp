@@ -146,6 +146,11 @@ const resolvers = {
 
 (async () => {
 	const app = express();
+
+	// enable cors
+	app.use(cors());
+	app.options("*", cors());
+
 	const httpServer = createServer(app);
 
 	const schema = makeExecutableSchema({ typeDefs, resolvers });
