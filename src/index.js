@@ -1,4 +1,5 @@
 const express = require("express");
+const cors = require("cors");
 
 const { ApolloServerPluginDrainHttpServer } = require("apollo-server-core");
 const { createServer } = require("http");
